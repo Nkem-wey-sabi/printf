@@ -9,48 +9,87 @@
  * Return: address pointer
  */
 
-int print_ptr(va_list arg)
+unsigned int convert_x(va_list args, buffer_t *output,
+		unsigned char flags, int wid, int prec, unsigned char len);
+unsigned int convert_X(va_list args, buffer_t *output,
+		unsigned char flags, int wid, int prec, unsigned char len);
+
+/**
+ * convert_x - Converts an unsigned int argument to hex using abcdef
+ *             and stores it to a buffer contained in a struct.
+ * @args: A va_list pointing to the argument to be converted.
+ * @flags: Flag modifiers.
+ * @wid: A width modifier.
+ * @prec: A precision modifier.
+ * @len: A length modifier.
+ * @output: A buffer_t struct containing a character array.
+ *
+ * Return: The number of bytes stored to the buffer.
+ */
+unsigned int convert_x(va_list args, buffer_t *output,
+		unsigned char flags, int wid, int prec, unsigned char len)
 {
-	unsigned long int dec, buffr;
-	char c[100];
-	int count, n, i;
+	unsigned long int num;
+	unsigned int ret = 0;
+	char *lead = "0x";
 
-	dec = (unsigned long int)va_arg(arg, void*);
-	buffr = dec;
-	count = 1;
-	i = 0;
+	if (len == LONG)
+		num = va_arg(args, unsigned long int);
+	else
+		num = va_arg(args, unsigned int);
+	if (len == SHORT)
+		num = (unsigned short)num;
 
-	if (!dec)
-	{
-		_puts("(nil)");
-		return (5);
-	}
-	while (buffr)
-	{
-		buffr /= 16;
-		count++;
-	}
-	c[count + 1] = '\0';
-	while (dec > 0)
-	{
-		n = (dec % 16);
-		if (n >= 0 && n <= 9)
-			c[count] = ((char)(n + '0'));
-		else
-			c[count] = ((char)(n + 'W'));
-		count--;
-		dec /= 16;
-	}
-	c[0] = '0';
-	c[1] = 'x';
+	if (HASH_FLAG == 1 && num != 0)
+		ret += _memcpy(output, lead, 2);
 
-	while (c[i] != '\0')
-	{
-		_putchar(c[i]);
-		i++;
-	}
-	return (i);
+	if (!(num == 0 && prec == 0))
+		ret += convert_ubase(output, num, "0123456789abcdef",
+				flags, wid, prec);
+
+	ret += print_neg_width(output, ret, flags, wid);
+
+	return (ret);
 }
+
+/**
+ * convert_X - Converts an unsigned int argument to hex using ABCDEF
+ *             and stores it to a buffer contained in a struct.
+ * @args: A va_list pointing to the argument to be converted.
+ * @flags: Flag modifiers.
+ * @wid: A width modifier.
+ * @prec: A precision modifier.
+ * @len: A length modifier.
+ * @output: A buffer_t struct containing a character array.
+ *
+ * Return: The number of bytes stored to the buffer.
+ */
+unsigned int convert_X(va_list args, buffer_t *output,
+		unsigned char flags, int wid, int prec, unsigned char len)
+{
+	unsigned long int num;
+	unsigned int ret = 0;
+	char *lead = "0X";
+
+	if (len == LONG)
+		num = va_arg(args, unsigned long);
+	else
+		num = va_arg(args, unsigned int);
+	if (len == SHORT)
+		num = (unsigned short)num;
+
+	if (HASH_FLAG == 1 && num != 0)
+		ret += _memcpy(output, lead, 2);
+
+	if (!(num == 0 && prec == 0))
+		ret += convert_ubase(output, num, "0123456789ABCDEF",
+				flags, wid, prec);
+
+	ret += print_neg_width(output, ret, flags, wid);
+
+	return (ret);
+}
+
 
 /**
  * print_rot13 - prints a string using rot13
